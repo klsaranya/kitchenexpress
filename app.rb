@@ -23,10 +23,15 @@ class Admin < Sinatra::Base
   end
 
   configure do
-    MongoMapper.connection = Mongo::Connection.new('localhost', 27017 ,:logger => Logger.new(STDOUT))
-    MongoMapper.database = 'admin'
+    regex_match = /.*:\/\/(.*):(.*)@(.*):(.*)\//.match("mongodb://kitchenexpress:easymoby@ds053828.mongolab.com:53828/kitchenexpress")
+    host = regex_match[3]
+    port = regex_match[4]
+    db_name = regex_match[1]
+    pw = regex_match[2]
+    MongoMapper.connection = Mongo::Connection.new(host,port)
+    MongoMapper.database = db_name
+    MongoMapper.database.authenticate(db_name, pw)
     enable :cross_origin
-
 
   end
 
@@ -43,6 +48,21 @@ class Admin < Sinatra::Base
   }
 end
 
+
+  #   get '/' do
+  #   return %Q{
+  #     <form action="kitchen/<%= kitchenid %>/menu" method="post" accept-charset="utf-8" enctype="multipart/form-data">
+  #       <div>
+  #         <input type='text' name='kitchenid'/><br/>
+  #         <input type='text' name='data'/><br/>
+  #       </div>
+  #       <div>
+  #         <input type="submit">
+  #       </div>
+  #     </form>
+  #   }
+  # end
+
   get '/kitchen/:id/menu' do |id|
   	content_type 'application/json'
   	menu = ItemStore.find(id)
@@ -57,6 +77,7 @@ end
    	{"success" => 1 }.to_json
   end
 
+  # wildcard route
   options '*' do
 
   end
@@ -78,7 +99,9 @@ end
 	    :access => :public_read
 	  )
 	  url = "https://#{bucket}.s3.amazonaws.com/#{filename}"
+    puts url
 	  return { url: url}.to_json
+
   end
 
 
